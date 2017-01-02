@@ -14,7 +14,8 @@
 
 
 int ImplicitRoutine(sjsModel* implicit_model){
-  int max_timestep = 4000000;  // 10000000;
+  int max_timestep = implicit_model->NewtonianGetSolverMaxTimestep();
+  int screen_interval = implicit_model->NewtonianGetResultsIntervalFile();
   double current_timestep;
 
 
@@ -39,7 +40,7 @@ int ImplicitRoutine(sjsModel* implicit_model){
     implicit_model->NewtonianBuildHMatrix();
     implicit_model->NewtonianBuildUMatrix();
     
-    if(i % 4000 == 0){
+    if(i % screen_interval == 0){
       current_timestep = (double)i*implicit_model->NewtonianGetTimeStep();
       std::cout<<std::setprecision(5)<<current_timestep<<std::endl;
     }
@@ -77,7 +78,11 @@ int main(){
   bool h_bottom_neumann = true;
 
 
-
+  // post-processing parameters
+  bool write_results_to_file = true;
+  int results_interval_file = 40000;
+  int results_interval_screen = 4000;
+  int solver_max_timestep = 800000;
 
   
 
@@ -112,6 +117,12 @@ int main(){
   model->NewtonianSetUBottomNeumann(u_bottom_neumann);
   model->NewtonianSetHTopNeumann(h_top_neumann);
   model->NewtonianSetHBottomNeumann(h_bottom_neumann);
+
+  model->NewtonianSetIsWriteResultsToFile(write_results_to_file);
+  model->NewtonianSetResultsIntervalFile(results_interval_file);
+  model->NewtonianSetResultsIntervalScreen(results_interval_screen);
+  model->NewtonianSetSolverMaxTimestep(solver_max_timestep);
+
 
   //ImplicitRoutine(model);
 

@@ -93,7 +93,6 @@ public:
 	// Assign the kinematic viscosity of the fluid
 	void SetKinematicViscosity(double value);
 
-
 	// Build U Matrix
 	void BuildUMatrix();
 
@@ -108,6 +107,22 @@ public:
 
 	// Set solver in time
 	void SetIsTimeExplicit(bool state);
+
+	// Set if the results will be written to a file
+    void SetIsWriteResultsToFile(bool write_results_to_file);
+ 	bool GetIsWriteResultsToFile();
+
+  	// Set the time step interval for the results to be written to a file (valid if write_results_to_file = true)
+    void SetResultsIntervalFile(int results_interval_file);
+    int GetResultsIntervalFile();
+
+    // Set the time step interval for the results to be written on the screem 
+    void SetResultsIntervalScreen(int results_interval_screen);
+  	int GetResultsIntervalScreen();
+
+  	// Set solver maximum timestep
+    void SetSolverMaxTimestep(int solver_max_timestep);
+    int GetSolverMaxTimestep();
 
 	// Solve U explicitly
 	void SolveUExplicit();
@@ -141,6 +156,11 @@ private:
 	bool m_isUbottomneumann;
 
 	bool m_isTimeExplicit; // true if the solution is explicit in time
+
+	bool m_isResultsWriteFile; // true if output files will be generated
+	int m_resultsFileTimestepInterval; // timestep interval for results file to be generated
+	int m_resultsScreenTimestepInterval; // timestep interval for results to be printed on the screen
+	int m_maxtimestep; // maximum timestep for the solver
 
 	double** m_Ah; // coefficient matrix for jet thickness
 	double* m_bh; // right hand side for jet thickness

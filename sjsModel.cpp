@@ -197,6 +197,52 @@ void sjsModel::NewtonianSetIsTimeExplicit(bool state){
 	}
 }
 
+/// Set if the results will be written to a file
+void sjsModel::NewtonianSetIsWriteResultsToFile(bool write_results_to_file){
+	m_newtonianJet->SetIsWriteResultsToFile(write_results_to_file);
+}
+
+/// Set the time step interval for the results to be written to a file (valid if write_results_to_file = true)
+void sjsModel::NewtonianSetResultsIntervalFile(int results_interval_file){
+	m_newtonianJet->SetResultsIntervalFile(results_interval_file);
+}
+
+/// Set the time step interval for the results to be written on the screem 
+void sjsModel::NewtonianSetResultsIntervalScreen(int results_interval_screen){
+	m_newtonianJet->SetResultsIntervalScreen(results_interval_screen);
+}
+
+/// Set solver maximum timestep
+void sjsModel::NewtonianSetSolverMaxTimestep(int solver_max_timestep){
+	m_newtonianJet->SetSolverMaxTimestep(solver_max_timestep);
+}
+
+/// Get if the results will be written to a file
+bool sjsModel::NewtonianGetIsWriteResultsToFile(){
+	return m_newtonianJet->GetIsWriteResultsToFile();
+}
+
+/// Get the time step interval for the results to be written to a file (valid if write_results_to_file = true)
+int sjsModel::NewtonianGetResultsIntervalFile(){
+	return m_newtonianJet->GetResultsIntervalFile();
+}
+
+/// Get the time step interval for the results to be written on the screen
+int sjsModel::NewtonianGetResultsIntervalScreen(){
+	return m_newtonianJet->GetResultsIntervalScreen();
+}
+
+int sjsModel::NewtonianGetSolverMaxTimestep(){
+	return m_newtonianJet->GetSolverMaxTimestep();
+}
+
+
+
+
+
+
+
+
 /// Solve U explicitly
 void sjsModel::NewtonianSolveUExplicit(){
 	m_newtonianJet->SolveUExplicit();

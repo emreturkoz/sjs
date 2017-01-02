@@ -279,7 +279,45 @@ void sjsNewtonianJet::SetKinematicViscosity(double value){
 	m_nu = value;
 }
 
+/// Set if the results will be written to a file
+void sjsNewtonianJet::SetIsWriteResultsToFile(bool write_results_to_file){
+	m_isResultsWriteFile = write_results_to_file;
+}
 
+/// Set the time step interval for the results to be written to a file (valid if write_results_to_file = true)
+void sjsNewtonianJet::SetResultsIntervalFile(int results_interval_file){
+	m_resultsFileTimestepInterval = results_interval_file;
+}
+
+/// Set the time step interval for the results to be written on the screen
+void sjsNewtonianJet::SetResultsIntervalScreen(int results_interval_screen){
+	m_resultsScreenTimestepInterval = results_interval_screen;
+}
+
+/// Set solver maximum timestep
+void sjsNewtonianJet::SetSolverMaxTimestep(int solver_max_timestep){
+	m_maxtimestep = solver_max_timestep;
+}
+
+/// Get if the results will be written to a file
+bool sjsNewtonianJet::GetIsWriteResultsToFile(){
+	return m_isResultsWriteFile;
+}
+
+/// Get the time step interval for the results to be written to a file (valid if write_results_to_file = true)
+int sjsNewtonianJet::GetResultsIntervalFile(){
+	return m_resultsFileTimestepInterval;
+}
+
+/// Get the time step interval for the results to be written on the screen
+int sjsNewtonianJet::GetResultsIntervalScreen(){
+	return m_resultsScreenTimestepInterval;
+}
+
+/// Get solver maximum timestep
+int sjsNewtonianJet::GetSolverMaxTimestep(){
+	return m_maxtimestep;
+}
 
 
 /// Build U Matrix
@@ -490,7 +528,7 @@ void sjsNewtonianJet::SetPreviousThicknessField(){
 		m_xh_old[i] = m_xh[i];
 	}
 
-	if (m_timeIterationCount % 40000 == 0){
+	if (m_timeIterationCount % m_resultsFileTimestepInterval == 0){
 		char fileName[80];
 		sprintf( fileName, "h-timestep%i.txt", m_timeIterationCount );
 
@@ -513,7 +551,7 @@ void sjsNewtonianJet::SetPreviousVelocityField(){
 		m_xu_old[i] = m_xu[i];
 	}
 
-	if (m_timeIterationCount % 40000 == 0){
+	if (m_timeIterationCount % m_resultsFileTimestepInterval == 0){
 		char fileName[80];
 		sprintf( fileName, "u-timestep%i.txt", m_timeIterationCount );
 

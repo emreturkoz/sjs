@@ -115,6 +115,22 @@ public:
 
 	// Set solver in time
 	void NewtonianSetIsTimeExplicit(bool state);
+	
+	// Set if the results will be written to a file
+    void NewtonianSetIsWriteResultsToFile(bool write_results_to_file);
+  	bool NewtonianGetIsWriteResultsToFile();
+
+  	// Set the time step interval for the results to be written to a file (valid if write_results_to_file = true)
+    void NewtonianSetResultsIntervalFile(int results_interval_file);
+    int NewtonianGetResultsIntervalFile();
+
+    // Set the time step interval for the results to be written on the screen 
+    void NewtonianSetResultsIntervalScreen(int results_interval_screen);
+  	int NewtonianGetResultsIntervalScreen();
+
+  	// Set solver maximum timestep
+    void NewtonianSetSolverMaxTimestep(int solver_max_timestep);
+    int NewtonianGetSolverMaxTimestep();
 
 	// Solve U explicitly
 	void NewtonianSolveUExplicit();
