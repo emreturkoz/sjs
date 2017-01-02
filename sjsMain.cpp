@@ -13,6 +13,8 @@
 #include "sjsModel.h"
 
 
+
+// Execute this if the routine is implicit in time
 int ImplicitRoutine(sjsModel* implicit_model){
   int max_timestep = implicit_model->NewtonianGetSolverMaxTimestep();
   int screen_interval = implicit_model->NewtonianGetResultsIntervalFile();
@@ -53,6 +55,31 @@ int ImplicitRoutine(sjsModel* implicit_model){
 }
 
 
+// Execute this if the routine is explicit in time
+int ExplicitRoutine(sjsModel* explicit_model){
+
+  int max_timestep = explicit_model->NewtonianGetSolverMaxTimestep();
+  int screen_interval = explicit_model->NewtonianGetResultsIntervalFile();
+  double current_timestep;
+
+  // The loop starts here
+  for(int i = 0; i<max_timestep; i++){
+    explicit_model->NewtonianSolveHExplicit();
+    explicit_model->NewtonianSolveUExplicit();
+    explicit_model->NewtonianExplicitTimeMarch(i);
+
+    if(i % screen_interval == 0){
+      current_timestep = (double)i*explicit_model->NewtonianGetTimeStep();
+      std::cout<<std::setprecision(5)<<current_timestep<<std::endl;
+    }
+
+  }
+
+
+
+  return 0;
+}
+
 int main(){
   
   sjsModel *model = new sjsModel();
@@ -80,9 +107,9 @@ int main(){
 
   // post-processing parameters
   bool write_results_to_file = true;
-  int results_interval_file = 40000;
-  int results_interval_screen = 4000;
-  int solver_max_timestep = 800000;
+  int results_interval_file = 1;
+  int results_interval_screen = 1;
+  int solver_max_timestep = 8;
 
   
 
@@ -102,7 +129,7 @@ int main(){
 
   model->NewtonianSetInitialRadius(initial_jet_radius);
   model->NewtonianSetJetProfilePerturbation(jet_profile_perturbation);
-
+  
   model->NewtonianSetIsTimeExplicit(is_time_explicit); 
 
   model->NewtonianInitateJetProfile();
@@ -124,8 +151,10 @@ int main(){
   model->NewtonianSetSolverMaxTimestep(solver_max_timestep);
 
 
-  //ImplicitRoutine(model);
+  
 
+  //ImplicitRoutine(model);
+  ExplicitRoutine(model);
 
 
 

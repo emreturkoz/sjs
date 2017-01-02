@@ -82,6 +82,10 @@ void sjsNewtonianJet::SetTimeIterationCount(int t){
 void sjsNewtonianJet::SetAxialDomainLength(double length){
 	m_xlength = length;
 
+	// Initiate the curvature and mesh arrays 
+	m_kappa = AllocateDynamicVector<double>(m_numNodesX);
+	m_dz = m_xlength/((double)m_numNodesX-1);	
+
 }
 
 /// Set initial radius
@@ -137,13 +141,6 @@ void sjsNewtonianJet::InitiateMatrices(){
 	m_bu = AllocateDynamicVector<double>(m_numNodesX-1);
 	m_xu = AllocateDynamicVector<double>(m_numNodesX-1);
 	m_xu_old = AllocateDynamicVector<double>(m_numNodesX-1);
-
-	m_kappa = AllocateDynamicVector<double>(m_numNodesX);
-
-
-
-	m_dz = m_xlength/((double)m_numNodesX-1);
-
 }
 
 
@@ -203,9 +200,17 @@ void sjsNewtonianJet::CalculateCurvatureField(){
 
 
 	for(int i = 1; i<m_numNodesX-1; i++){
-		dh_dzz = (m_xh[i+1] - 2*m_xh[i] + m_xh[i-1])/(2*m_dz*m_dz);
-		dh_dz =  (m_xh[i+1] - m_xh[i-1])/(2*m_dz);
-		m_kappa[i] = 1.0/(m_xh[i]*sqrt(1+dh_dzz*dh_dzz)) - dh_dzz/pow(1+dh_dz*dh_dz,1.5);
+		if (m_isTimeExplicit){
+			dh_dzz = (m_hexp[i+1] - 2*m_hexp[i] + m_hexp[i-1])/(m_dz*m_dz);
+			dh_dz =  (m_hexp[i+1] - m_hexp[i-1])/(2*m_dz);						
+			m_kappa[i] = 1.0/(m_hexp[i]*sqrt(1+dh_dzz*dh_dzz)) - dh_dzz/pow(1+dh_dz*dh_dz,1.5);			
+		}
+		else{
+			dh_dzz = (m_xh[i+1] - 2*m_xh[i] + m_xh[i-1])/(m_dz*m_dz);
+			dh_dz =  (m_xh[i+1] - m_xh[i-1])/(2*m_dz);
+			m_kappa[i] = 1.0/(m_xh[i]*sqrt(1+dh_dzz*dh_dzz)) - dh_dzz/pow(1+dh_dz*dh_dz,1.5);			
+		}
+		
 	}
 
 
@@ -240,7 +245,7 @@ void sjsNewtonianJet::InitiateJetProfile(){
 	for(int i = 0; i<m_numNodesX; i++){
 		if(m_isTimeExplicit){
 			m_hexp[i] = m_r0*(1+m_eps*cos(k*i*m_dz));
-			m_hexp_old[i] = m_xh[i];
+			m_hexp_old[i] = m_hexp[i];
 		}
 		else{
 			m_xh[i] = m_r0*(1+m_eps*cos(k*i*m_dz));
@@ -502,7 +507,6 @@ void sjsNewtonianJet::InitiateExplicitSolvers(){
 	m_uexp_old = AllocateDynamicVector<double>(m_numNodesX);
 	m_hexp_old = AllocateDynamicVector<double>(m_numNodesX);
 
-	// equate the current and previous jet profiles
 
 
 }
@@ -516,6 +520,26 @@ void sjsNewtonianJet::ExplicitTimeMarch(int timestep){
 		m_uexp_old[i] = m_uexp[i];
 	}
 
+	m_timeIterationCount = timestep;
+
+	if (m_timeIterationCount % m_resultsFileTimestepInterval == 0){
+		char fileName[80];
+		char fileName2[80];
+		sprintf( fileName, "u-timestep%i.txt", m_timeIterationCount );
+		sprintf( fileName2, "h-timestep%i.txt", m_timeIterationCount );
+
+		std::ofstream debug;
+		std::ofstream debug2;
+		debug.open(fileName);
+		debug2.open(fileName2);
+
+		for(int i=0; i<m_numNodesX; i++){
+			debug<<m_uexp_old[i]<<std::endl;
+			debug2<<m_hexp_old[i]<<std::endl;
+		}
+		debug.close();
+		debug2.close();
+	}
 
 
 }
