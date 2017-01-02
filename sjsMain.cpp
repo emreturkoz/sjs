@@ -59,7 +59,7 @@ int ImplicitRoutine(sjsModel* implicit_model){
 int ExplicitRoutine(sjsModel* explicit_model){
 
   int max_timestep = explicit_model->NewtonianGetSolverMaxTimestep();
-  int screen_interval = explicit_model->NewtonianGetResultsIntervalFile();
+  int screen_interval = explicit_model->NewtonianGetResultsIntervalScreen();
   double current_timestep;
 
   // The loop starts here
@@ -70,7 +70,7 @@ int ExplicitRoutine(sjsModel* explicit_model){
 
     if(i % screen_interval == 0){
       current_timestep = (double)i*explicit_model->NewtonianGetTimeStep();
-      std::cout<<std::setprecision(5)<<current_timestep<<std::endl;
+      std::cout<<i<<" "<<std::setprecision(5)<<current_timestep<<std::endl;
     }
 
   }
@@ -89,11 +89,11 @@ int main(){
   int axial_node_count = 1400;
   double axial_domain_length = 0.04; // [m]
   double initial_jet_radius = 0.005; // [m]
-  double jet_profile_perturbation = 0.05; // relative -> perturbation/radius
+  double jet_profile_perturbation = 0.08; // relative -> perturbation/radius
   double surface_tension = 0.0729; // N/m -> 72.9 mN/m is for water
   double density = 1000; // [kg/m3] density of the fliuid -> 1000 kg/m3 is for water
   double kinematic_viscosity = 1.0e-6;
-  double time_step = 2.0e-5; // relative time step. this can be multiplied either with Rayleigh time step, or diffusive time step
+  double time_step = 3.0e-5; // relative time step. this can be multiplied either with Rayleigh time step, or diffusive time step
 
   bool is_time_explicit = true;
 
@@ -107,9 +107,9 @@ int main(){
 
   // post-processing parameters
   bool write_results_to_file = true;
-  int results_interval_file = 1;
-  int results_interval_screen = 1;
-  int solver_max_timestep = 8;
+  int results_interval_file = 2000;
+  int results_interval_screen = 2000;
+  int solver_max_timestep = 400001;
 
   
 
@@ -151,7 +151,15 @@ int main(){
   model->NewtonianSetSolverMaxTimestep(solver_max_timestep);
 
 
-  
+  // Informative output
+  double t_rayleigh = sqrt(density*initial_jet_radius*initial_jet_radius*initial_jet_radius/surface_tension);
+  double t_diffusion = initial_jet_radius*initial_jet_radius/kinematic_viscosity;
+  std::cout<<"The Rayleigh time scale for this problem: "<<t_rayleigh<<" seconds"<<std::endl;
+  std::cout<<"The diffusion time scale is: "<<t_diffusion<<" seconds"<<std::endl; 
+  double u_rayleigh = initial_jet_radius/t_rayleigh;
+  double t_cfl = (axial_domain_length/(axial_node_count-1))/u_rayleigh;
+  std::cout<<"The CFL condition time scale is: "<<t_cfl<<std::endl;
+
 
   //ImplicitRoutine(model);
   ExplicitRoutine(model);

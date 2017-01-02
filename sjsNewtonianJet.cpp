@@ -203,12 +203,12 @@ void sjsNewtonianJet::CalculateCurvatureField(){
 		if (m_isTimeExplicit){
 			dh_dzz = (m_hexp[i+1] - 2*m_hexp[i] + m_hexp[i-1])/(m_dz*m_dz);
 			dh_dz =  (m_hexp[i+1] - m_hexp[i-1])/(2*m_dz);						
-			m_kappa[i] = 1.0/(m_hexp[i]*sqrt(1+dh_dzz*dh_dzz)) - dh_dzz/pow(1+dh_dz*dh_dz,1.5);			
+			m_kappa[i] = 1.0/(m_hexp[i]*sqrt(1+dh_dz*dh_dz)) - dh_dzz/pow(1+dh_dz*dh_dz,1.5);			
 		}
 		else{
 			dh_dzz = (m_xh[i+1] - 2*m_xh[i] + m_xh[i-1])/(m_dz*m_dz);
 			dh_dz =  (m_xh[i+1] - m_xh[i-1])/(2*m_dz);
-			m_kappa[i] = 1.0/(m_xh[i]*sqrt(1+dh_dzz*dh_dzz)) - dh_dzz/pow(1+dh_dz*dh_dz,1.5);			
+			m_kappa[i] = 1.0/(m_xh[i]*sqrt(1+dh_dz*dh_dz)) - dh_dzz/pow(1+dh_dz*dh_dz,1.5);			
 		}
 		
 	}
@@ -449,10 +449,10 @@ void sjsNewtonianJet::SolveUExplicit(){
 		dv2dz2 = (m_uexp_old[i+1] - 2.0*m_uexp_old[i] + m_uexp_old[i-1])/(m_dz*m_dz); 		
 		dv_dz = 0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
 		dh_dz = 0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz; 
-		inertia_term = m_uexp_old[i]*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
+		inertia_term = m_uexp_old[i]*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
 		pressure_term = -(m_gamma/m_rho)*0.5*(m_kappa[i+1] - m_kappa[i-1])/m_dz;
 		diff_term = h2*(dv2dz2) + dv_dz*2.0*m_hexp_old[i]*dh_dz;  
-		f = -inertia_term - pressure_term + 3.0*diff_term*m_nu/h2 ;
+		f = -inertia_term + pressure_term + 3.0*diff_term*m_nu/h2 ;
 		m_uexp[i] = m_uexp_old[i] + m_dt*f;
 	}
 
@@ -480,14 +480,14 @@ void sjsNewtonianJet::SolveHExplicit(){
 	double f;
 
 	for(int i = 1; i<m_numNodesX-1; i++){
-		f = (-m_hexp_old[i]/2.0)*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz - (m_uexp_old[i]*0.5*(m_hexp_old[i+1] - m_hexp_old[i-1]));
+		f = (-m_hexp_old[i]/2.0)*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz - (m_uexp_old[i]*0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz);
 		m_hexp[i] = m_hexp_old[i] + m_dt*f;
 	}
 
 	//*******Boundary conditions*******//
 
 	if(m_isHtopneumann){
-		m_hexp[0] = m_hexp_old[1];
+		m_hexp[0] = m_hexp[1];
 	}
 
 	if (m_isHbottomneumann){
