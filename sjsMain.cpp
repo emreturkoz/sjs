@@ -14,6 +14,10 @@
 
 
 int ImplicitRoutine(sjsModel* implicit_model){
+  int max_timestep = 4000000;  // 10000000;
+  double current_timestep;
+
+
 
   implicit_model->NewtonianBuildHMatrix();
   implicit_model->NewtonianBuildUMatrix();
@@ -73,10 +77,6 @@ int main(){
   bool h_bottom_neumann = true;
 
 
-
-
-  int max_timestep = 4000000;  // 10000000;
-  double current_timestep;
 
 
   
