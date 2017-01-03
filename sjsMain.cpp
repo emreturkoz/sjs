@@ -86,14 +86,14 @@ int main(){
 
   // List of parameters to describe the problem and to be sent to the model
   
-  int axial_node_count = 1400;
+  int axial_node_count = 5000;
   double axial_domain_length = 0.04; // [m]
   double initial_jet_radius = 0.005; // [m]
   double jet_profile_perturbation = 0.08; // relative -> perturbation/radius
   double surface_tension = 0.0729; // N/m -> 72.9 mN/m is for water
   double density = 1000; // [kg/m3] density of the fliuid -> 1000 kg/m3 is for water
   double kinematic_viscosity = 1.0e-6;
-  double time_step = 3.0e-5; // relative time step. this can be multiplied either with Rayleigh time step, or diffusive time step
+  double time_step = 3.0e-6; // relative time step. this can be multiplied either with Rayleigh time step, or diffusive time step
 
   bool is_time_explicit = true;
 
@@ -107,9 +107,9 @@ int main(){
 
   // post-processing parameters
   bool write_results_to_file = true;
-  int results_interval_file = 2000;
-  int results_interval_screen = 2000;
-  int solver_max_timestep = 400001;
+  int results_interval_file = 20000;
+  int results_interval_screen = 20000;
+  int solver_max_timestep = 4000001;
 
   
 
