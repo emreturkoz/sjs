@@ -443,18 +443,24 @@ void sjsNewtonianJet::SolveUExplicit(){
 
 	double f,diff_term, h2, dv2dz2, dv_dz, dh_dz;
 	double inertia_term, pressure_term;
+	int i;
 
-	for(int i=1; i<m_numNodesX-1; i++){
-		h2 = m_hexp_old[i]*m_hexp_old[i];
-		dv2dz2 = (m_uexp_old[i+1] - 2.0*m_uexp_old[i] + m_uexp_old[i-1])/(m_dz*m_dz); 		
-		dv_dz = 0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
-		dh_dz = 0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz; 
-		inertia_term = m_uexp_old[i]*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
-		pressure_term = -(m_gamma/m_rho)*0.5*(m_kappa[i+1] - m_kappa[i-1])/m_dz;
-		diff_term = h2*(dv2dz2) + dv_dz*2.0*m_hexp_old[i]*dh_dz;  
-		f = -inertia_term + pressure_term + 3.0*diff_term*m_nu/h2 ;
-		m_uexp[i] = m_uexp_old[i] + m_dt*f;
-	}
+	//#pragma omp parallel
+	//{
+		//#pragma omp for
+		for(i=1; i<m_numNodesX-1; i++){
+			h2 = m_hexp_old[i]*m_hexp_old[i];
+			dv2dz2 = (m_uexp_old[i+1] - 2.0*m_uexp_old[i] + m_uexp_old[i-1])/(m_dz*m_dz); 		
+			dv_dz = 0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
+			dh_dz = 0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz; 
+			inertia_term = m_uexp_old[i]*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
+			pressure_term = -(m_gamma/m_rho)*0.5*(m_kappa[i+1] - m_kappa[i-1])/m_dz;
+			diff_term = h2*(dv2dz2) + dv_dz*2.0*m_hexp_old[i]*dh_dz;  
+			f = -inertia_term + pressure_term + 3.0*diff_term*m_nu/h2 ;
+			m_uexp[i] = m_uexp_old[i] + m_dt*f;
+		}
+	//}
+
 
 		// Boundary conditions
 	if (m_isUtopneumann){

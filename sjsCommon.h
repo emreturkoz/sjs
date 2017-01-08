@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include "omp.h"
 
 #define PI 3.14159265359	
 
