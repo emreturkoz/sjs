@@ -65,6 +65,7 @@ public:
 
 	// Calculate curvature field
 	void CalculateCurvatureField();
+	void CalculateCurvatureFieldParallel();
 
 	// Set jet profile perturbation
 	void SetJetProfilePerturbation(double eps);
@@ -108,6 +109,12 @@ public:
 	// Set solver in time
 	void SetIsTimeExplicit(bool state);
 
+	// Set whether solver works in parallel
+	void SetIsSolverParallel(bool state);
+
+	// Get whether solver works in parallel
+	bool GetIsSolverParallel();
+
 	// Set if the results will be written to a file
     void SetIsWriteResultsToFile(bool write_results_to_file);
  	bool GetIsWriteResultsToFile();
@@ -126,9 +133,11 @@ public:
 
 	// Solve U explicitly
 	void SolveUExplicit();
+	void SolveUExplicitParallel();
 
 	// Solve H explicitly
 	void SolveHExplicit();
+	void SolveHExplicitParallel();
 
 	// Initiate explicit solvers
 	void InitiateExplicitSolvers();
@@ -156,6 +165,8 @@ private:
 	bool m_isUbottomneumann;
 
 	bool m_isTimeExplicit; // true if the solution is explicit in time
+
+	bool m_isSolverParallel; // true if te solver works in parallel
 
 	bool m_isResultsWriteFile; // true if output files will be generated
 	int m_resultsFileTimestepInterval; // timestep interval for results file to be generated
@@ -194,6 +205,17 @@ private:
 	sjsSolvers *m_Hsolver;
 	sjsSolvers* m_Usolver;
 
+
+	// arrays to be used in parallel solver
+	double* m_h2; 
+	double* m_dv2dz2; 
+	double* m_dv_dz;
+	double* m_dh_dz;
+	double* m_inertia_term; 
+	double* m_pressure_term; 
+	double* m_diff_term; 
+	double* m_f;
+	
 };
 
 

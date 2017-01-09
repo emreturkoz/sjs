@@ -116,6 +116,10 @@ public:
 	// Set solver in time
 	void NewtonianSetIsTimeExplicit(bool state);
 	
+	// Set whether solver works in parallel
+	void NewtonianSetIsSolverParallel(bool state);
+	bool NewtonianGetIsSolverParallel();
+
 	// Set if the results will be written to a file
     void NewtonianSetIsWriteResultsToFile(bool write_results_to_file);
   	bool NewtonianGetIsWriteResultsToFile();
@@ -134,9 +138,11 @@ public:
 
 	// Solve U explicitly
 	void NewtonianSolveUExplicit();
+	void NewtonianSolveUExplicitParallel();
 
 	// Solve H explicitly
 	void NewtonianSolveHExplicit();
+	void NewtonianSolveHExplicitParallel();
 
 	// Initiate explicit solvers
 	void NewtonianInitiateExplicitSolvers();

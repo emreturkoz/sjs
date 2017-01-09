@@ -47,6 +47,7 @@ sjsNewtonianJet::sjsNewtonianJet(){
 
 
 	m_isTimeExplicit = false; // default setting for time march
+	m_isSolverParallel = false; // defult setting is that the solver works in serial.
 }
 
 /// Destructor
@@ -58,6 +59,16 @@ sjsNewtonianJet::~sjsNewtonianJet(){
 /// Set solver in time
 void sjsNewtonianJet::SetIsTimeExplicit(bool state){
 	m_isTimeExplicit = state;
+}
+
+/// Set whether solver works in parallel
+void sjsNewtonianJet::SetIsSolverParallel(bool state){
+	m_isSolverParallel = state;
+}
+
+/// Get whether solver works in parallel
+bool sjsNewtonianJet::GetIsSolverParallel(){
+	return m_isSolverParallel;
 }
 
 /// Set the number of nodes in axial direction
@@ -214,6 +225,8 @@ void sjsNewtonianJet::CalculateCurvatureField(){
 	}
 
 
+
+
 	//m_kappa[0] = 1.0/m_xh[0];
 	//m_kappa[m_numNodesX-1] = 1.0/m_xh[m_numNodesX-1];
 
@@ -234,6 +247,36 @@ void sjsNewtonianJet::CalculateCurvatureField(){
 
 }
 
+/// Calculate the curvature (in parallel)
+void sjsNewtonianJet::CalculateCurvatureFieldParallel(){
+
+	double dh_dzz, dh_dz;
+	int i;
+
+	#pragma omp parallel private(dh_dzz, dh_dz)
+	{
+		#pragma omp for
+		for(i = 1; i<m_numNodesX-1; i++)
+		{
+			dh_dzz = (m_hexp[i+1] - 2*m_hexp[i] + m_hexp[i-1])/(m_dz*m_dz);
+			dh_dz =  (m_hexp[i+1] - m_hexp[i-1])/(2*m_dz);						
+			m_kappa[i] = 1.0/(m_hexp[i]*sqrt(1+dh_dz*dh_dz)) - dh_dzz/pow(1+dh_dz*dh_dz,1.5);					
+		}
+	}
+
+
+
+
+
+	//m_kappa[0] = 1.0/m_xh[0];
+	//m_kappa[m_numNodesX-1] = 1.0/m_xh[m_numNodesX-1];
+
+	m_kappa[0] = m_kappa[1];
+	m_kappa[m_numNodesX-1] = m_kappa[m_numNodesX-2];
+
+
+
+}
 
 
 /// Initiate Jet Profile
@@ -445,24 +488,21 @@ void sjsNewtonianJet::SolveUExplicit(){
 	double inertia_term, pressure_term;
 	int i;
 
-	//#pragma omp parallel
-	//{
-		//#pragma omp for
-		for(i=1; i<m_numNodesX-1; i++){
-			h2 = m_hexp_old[i]*m_hexp_old[i];
-			dv2dz2 = (m_uexp_old[i+1] - 2.0*m_uexp_old[i] + m_uexp_old[i-1])/(m_dz*m_dz); 		
-			dv_dz = 0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
-			dh_dz = 0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz; 
-			inertia_term = m_uexp_old[i]*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
-			pressure_term = -(m_gamma/m_rho)*0.5*(m_kappa[i+1] - m_kappa[i-1])/m_dz;
-			diff_term = h2*(dv2dz2) + dv_dz*2.0*m_hexp_old[i]*dh_dz;  
-			f = -inertia_term + pressure_term + 3.0*diff_term*m_nu/h2 ;
-			m_uexp[i] = m_uexp_old[i] + m_dt*f;
-		}
-	//}
+	for(i=1; i<m_numNodesX-1; i++){
+		h2 = m_hexp_old[i]*m_hexp_old[i];
+		dv2dz2 = (m_uexp_old[i+1] - 2.0*m_uexp_old[i] + m_uexp_old[i-1])/(m_dz*m_dz); 		
+		dv_dz = 0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
+		dh_dz = 0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz; 
+		inertia_term = m_uexp_old[i]*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
+		pressure_term = -(m_gamma/m_rho)*0.5*(m_kappa[i+1] - m_kappa[i-1])/m_dz;
+		diff_term = h2*(dv2dz2) + dv_dz*2.0*m_hexp_old[i]*dh_dz;  
+		f = -inertia_term + pressure_term + 3.0*diff_term*m_nu/h2 ;
+		m_uexp[i] = m_uexp_old[i] + m_dt*f;
+	}
 
 
-		// Boundary conditions
+
+	// Boundary conditions
 	if (m_isUtopneumann){
 		m_uexp[0] = m_uexp[1]; 	
 	}
@@ -503,6 +543,111 @@ void sjsNewtonianJet::SolveHExplicit(){
 
 }
 
+
+
+/// Solve U explicitly
+void sjsNewtonianJet::SolveUExplicitParallel(){ 
+
+	int i;
+
+	this->CalculateCurvatureField();
+
+	// First form the arrays required at the evaluation of the u_next
+	#pragma omp parallel
+	{
+		#pragma omp for 
+		for (i = 1; i < m_numNodesX-1; ++i)
+		{
+			m_h2[i] = m_hexp_old[i]*m_hexp_old[i];
+			m_dv2dz2[i] = (m_uexp_old[i+1] - 2.0*m_uexp_old[i] + m_uexp_old[i-1])/(m_dz*m_dz); 		
+			m_dv_dz[i] = 0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
+			m_dh_dz[i] = 0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz; 
+		}
+	}
+
+
+	// 
+	#pragma omp parallel
+	{
+		#pragma omp for 
+		for (i = 1; i < m_numNodesX-1; ++i)
+		{
+			m_inertia_term[i] = m_uexp_old[i]*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz;
+			m_pressure_term[i] = -(m_gamma/m_rho)*0.5*(m_kappa[i+1] - m_kappa[i-1])/m_dz;
+			m_diff_term[i] = m_h2[i]*(m_dv2dz2[i]) + m_dv_dz[i]*2.0*m_hexp_old[i]*m_dh_dz[i];  			
+			m_f[i] = -m_inertia_term[i] + m_pressure_term[i] + 3.0*m_diff_term[i]*m_nu/m_h2[i];
+			m_uexp[i] = m_uexp_old[i] + m_dt*m_f[i];
+		}
+	}
+
+
+
+
+	// Boundary conditions
+	if (m_isUtopneumann){
+		m_uexp[0] = m_uexp[1]; 	
+	}
+	else{
+		m_uexp[0] = m_uTopDrichlet;
+	}
+
+	if (m_isUbottomneumann){
+		m_uexp[m_numNodesX-1] = m_uexp[m_numNodesX-2]; 
+	}
+	else{
+ 		m_uexp[m_numNodesX-1] = m_uBottomDrichlet;
+	}	
+
+
+}
+
+
+
+/// Solve H explicitly in parallel
+void sjsNewtonianJet::SolveHExplicitParallel(){ 
+
+
+	int i;
+
+	#pragma omp parallel
+	{
+		#pragma omp for
+		for(i = 1; i<m_numNodesX-1; i++)
+		{
+			m_f[i] = (-m_hexp_old[i]/2.0)*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz - (m_uexp_old[i]*0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz);
+			m_hexp[i] = m_hexp_old[i] + m_dt*m_f[i];
+		}
+	}
+
+
+
+	/*
+	#pragma omp parallel
+	{
+		#pragma omp for
+		for(i = 1; i<m_numNodesX-1; i++)
+		{
+			m_f[i] = (-m_hexp_old[i]/2.0)*0.5*(m_uexp_old[i+1] - m_uexp_old[i-1])/m_dz - (m_uexp_old[i]*0.5*(m_hexp_old[i+1] - m_hexp_old[i-1])/m_dz);
+			m_hexp[i] = m_hexp_old[i] + m_dt*m_f[i];
+		}
+	}
+	*/
+	//*******Boundary conditions*******//
+
+	if(m_isHtopneumann){
+		m_hexp[0] = m_hexp[1];
+	}
+
+	if (m_isHbottomneumann){
+		m_hexp[m_numNodesX-1] = m_hexp[m_numNodesX-2];
+	}
+
+
+}
+
+
+
+
 /// Initiate explicit solvers
 void sjsNewtonianJet::InitiateExplicitSolvers(){
 	// Initiate both of the solution arrays
@@ -513,6 +658,18 @@ void sjsNewtonianJet::InitiateExplicitSolvers(){
 	m_uexp_old = AllocateDynamicVector<double>(m_numNodesX);
 	m_hexp_old = AllocateDynamicVector<double>(m_numNodesX);
 
+	// these arrays are filled if the solver is in parallel
+	if (m_isSolverParallel){
+		m_h2 = AllocateDynamicVector<double>(m_numNodesX);
+		m_dv2dz2 = AllocateDynamicVector<double>(m_numNodesX);
+		m_dv_dz = AllocateDynamicVector<double>(m_numNodesX);
+		m_dh_dz = AllocateDynamicVector<double>(m_numNodesX);
+		m_inertia_term = AllocateDynamicVector<double>(m_numNodesX);
+		m_pressure_term= AllocateDynamicVector<double>(m_numNodesX);
+		m_diff_term = AllocateDynamicVector<double>(m_numNodesX);
+		m_f = AllocateDynamicVector<double>(m_numNodesX);
+
+	}
 
 
 }

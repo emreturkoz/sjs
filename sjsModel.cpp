@@ -197,6 +197,16 @@ void sjsModel::NewtonianSetIsTimeExplicit(bool state){
 	}
 }
 
+/// Set whether solver works in parallel
+void sjsModel::NewtonianSetIsSolverParallel(bool state){
+	m_newtonianJet->SetIsSolverParallel(state);
+}
+
+/// Get whether solver works in parallel
+bool sjsModel::NewtonianGetIsSolverParallel(){
+	return m_newtonianJet->GetIsSolverParallel();
+}
+
 /// Set if the results will be written to a file
 void sjsModel::NewtonianSetIsWriteResultsToFile(bool write_results_to_file){
 	m_newtonianJet->SetIsWriteResultsToFile(write_results_to_file);
@@ -239,10 +249,6 @@ int sjsModel::NewtonianGetSolverMaxTimestep(){
 
 
 
-
-
-
-
 /// Solve U explicitly
 void sjsModel::NewtonianSolveUExplicit(){
 	m_newtonianJet->SolveUExplicit();
@@ -262,5 +268,15 @@ void sjsModel::NewtonianInitiateExplicitSolvers(){
 void sjsModel::NewtonianExplicitTimeMarch(int timestep){
 	m_newtonianJet->ExplicitTimeMarch(timestep);
 
+}
+
+/// Solve U explicitly in parallel
+void sjsModel::NewtonianSolveUExplicitParallel(){
+	m_newtonianJet->SolveUExplicitParallel();
+}
+
+/// Solve H explicitly in parallel
+void sjsModel::NewtonianSolveHExplicitParallel(){
+	m_newtonianJet->SolveHExplicitParallel();
 }
 

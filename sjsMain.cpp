@@ -60,17 +60,38 @@ int ExplicitRoutine(sjsModel* explicit_model){
 
   int max_timestep = explicit_model->NewtonianGetSolverMaxTimestep();
   int screen_interval = explicit_model->NewtonianGetResultsIntervalScreen();
+  bool is_parallel = explicit_model->NewtonianGetIsSolverParallel();
   double current_timestep;
 
-  // The loop starts here
-  for(int i = 0; i<max_timestep; i++){
-    explicit_model->NewtonianSolveHExplicit();
-    explicit_model->NewtonianSolveUExplicit();
-    explicit_model->NewtonianExplicitTimeMarch(i);
 
-    if(i % screen_interval == 0){
-      current_timestep = (double)i*explicit_model->NewtonianGetTimeStep();
-      std::cout<<i<<" "<<std::setprecision(5)<<current_timestep<<std::endl;
+
+
+  // The loop starts here
+  
+  if (is_parallel == false){
+    for(int i = 0; i<max_timestep; i++){
+      explicit_model->NewtonianSolveHExplicit();
+      explicit_model->NewtonianSolveUExplicit();
+      explicit_model->NewtonianExplicitTimeMarch(i);
+
+      if(i % screen_interval == 0){
+        current_timestep = (double)i*explicit_model->NewtonianGetTimeStep();
+        std::cout<<i<<" "<<std::setprecision(5)<<current_timestep<<std::endl;
+      }
+
+    }
+  }
+  else{
+    for(int i = 0; i<max_timestep; i++){
+      explicit_model->NewtonianSolveHExplicitParallel();
+      explicit_model->NewtonianSolveUExplicitParallel();
+      explicit_model->NewtonianExplicitTimeMarch(i);
+
+      if(i % screen_interval == 0){
+        current_timestep = (double)i*explicit_model->NewtonianGetTimeStep();
+        std::cout<<i<<" "<<std::setprecision(5)<<current_timestep<<std::endl;
+      }
+
     }
 
   }
@@ -96,6 +117,7 @@ int main(){
   double time_step = 3.0e-5; // relative time step. this can be multiplied either with Rayleigh time step, or diffusive time step
 
   bool is_time_explicit = true;
+  bool is_solver_parallel = true;
 
 
   // boundary condition
@@ -130,6 +152,9 @@ int main(){
   model->NewtonianSetInitialRadius(initial_jet_radius);
   model->NewtonianSetJetProfilePerturbation(jet_profile_perturbation);
   
+  model->NewtonianSetIsSolverParallel(is_solver_parallel);
+  
+  // This is also where the arrays are intitated.
   model->NewtonianSetIsTimeExplicit(is_time_explicit); 
 
   model->NewtonianInitateJetProfile();
