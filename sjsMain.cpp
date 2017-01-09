@@ -102,6 +102,11 @@ int ExplicitRoutine(sjsModel* explicit_model){
 }
 
 int main(){
+
+  struct timespec start, end; 
+
+ clock_gettime(CLOCK_MONOTONIC, &start);  /* mark start time */
+ 
   
   sjsModel *model = new sjsModel();
 
@@ -117,7 +122,7 @@ int main(){
   double time_step = 3.0e-5; // relative time step. this can be multiplied either with Rayleigh time step, or diffusive time step
 
   bool is_time_explicit = true;
-  bool is_solver_parallel = true;
+  bool is_solver_parallel = false;
 
 
   // boundary condition
@@ -131,7 +136,7 @@ int main(){
   bool write_results_to_file = true;
   int results_interval_file = 10000;
   int results_interval_screen = 10000;
-  int solver_max_timestep = 200000;
+  int solver_max_timestep = 100000;
 
   
 
@@ -189,7 +194,9 @@ int main(){
   //ImplicitRoutine(model);
   ExplicitRoutine(model);
 
-
+  clock_gettime(CLOCK_MONOTONIC, &end); /* mark the end time */
+  double diff = double(end.tv_sec - start.tv_sec);
+  std::cout<<"elapsed time = "<<diff<<" seconds"<<std::endl;
 
 
 

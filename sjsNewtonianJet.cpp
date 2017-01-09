@@ -550,7 +550,7 @@ void sjsNewtonianJet::SolveUExplicitParallel(){
 
 	int i;
 
-	this->CalculateCurvatureField();
+	this->CalculateCurvatureFieldParallel();
 
 	// First form the arrays required at the evaluation of the u_next
 	#pragma omp parallel
